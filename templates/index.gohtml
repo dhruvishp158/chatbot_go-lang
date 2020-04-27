@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatBot</title>
+    <style>
+        body {
+  font: 15px arial, sans-serif;
+  background-color: #d9d9d9;
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+
+#bodybox {
+  margin: auto;
+  max-width: 550px;
+  font: 15px arial, sans-serif;
+  background-color: black;
+  border-style: solid;
+  border-width: 1px;
+  padding-top: 20px;
+  padding-bottom: 25px;
+  padding-right: 25px;
+  padding-left: 25px;
+  box-shadow: 5px 5px 5px grey;
+  border-radius: 15px;
+}
+
+#chatborder {
+  border-style: solid;
+  background-color: #f6f9f6;
+  border-width: 3px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  margin-left: 20px;
+  margin-right: 20px;
+  padding-top: 10px;
+  padding-bottom: 15px;
+  padding-right: 20px;
+  padding-left: 15px;
+  border-radius: 15px;
+}
+
+.chatlog {
+   font: 15px arial, sans-serif;
+}
+
+#chatbox {
+  font: 17px arial, sans-serif;
+  height: 22px;
+  width: 100%;
+}
+
+.heading{
+    text-align:center;
+    color:white;
+}
+
+
+    </style>
+</head>
+<body>
+       {{/* <h1>H1 tag</h1>
+       <form action="/process" method="POST">
+            <label for="fer">First Name: </label>
+            <input type="text" name="first" id="fer">
+            <label for="ler">Last Name: </label>
+            <input type="text" name="last" id="ler">
+            <input type="submit">
+        </form> */}}
+
+       <div id='bodybox'>
+       <h1 class="heading">CHATBOT</h1>
+        <div id='chatborder'>
+    <p id="chatlog7" class="chatlog">{{.Input}}&nbsp;</p>
+    <p id="chatlog6" class="chatlog">{{.Output}}&nbsp;</p>
+    <form action="/process" method="POST">
+    <input type="text" name="chat" id="chatbox" placeholder="Hi there! Type here to talk to me." onfocus="placeHolder()">
+    <input type="submit" class="enter">
+    </form>
+  </div>
+  
+</div>
+</body>
+</html>

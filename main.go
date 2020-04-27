@@ -1,36 +1,46 @@
 package main
 
 import (
-	"bufio"
-	"fmt"
+	"html/template"
 	"log"
-	"os"
+	"net/http"
 	"strings"
 
 	"github.com/Krognol/go-wolfram"
 	"github.com/christianrondeau/go-wit"
 )
 
+var tpl *template.Template
+
 var (
 	witClient     *wit.Client
 	wolframClient *wolfram.Client
 )
 
+func init() {
+	tpl = template.Must(template.ParseGlob("templates/*.gohtml"))
+}
 func main() {
 
 	witClient = wit.NewClient("Y5GBIJSC2VBI5YGQART772JGQAQMRLWQ")
 	wolframClient = &wolfram.Client{AppID: "YPAV2U-5X983J5VXJ"}
-	reader := bufio.NewReader(os.Stdin)
 
-	for true {
-		msg, _ := reader.ReadString('\n')
-		handleMessage(msg)
-
-	}
-
+	http.HandleFunc("/", index)
+	http.HandleFunc("/process", handleMessage)
+	http.ListenAndServe(":8080", nil)
 }
 
-func handleMessage(msg string) {
+func index(w http.ResponseWriter, r *http.Request) {
+	tpl.ExecuteTemplate(w, "index.gohtml", nil)
+}
+
+func handleMessage(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != "POST" {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+	chatInput := r.FormValue("chat")
 
 	var (
 		confidenceThreshold = 0.5
@@ -38,7 +48,7 @@ func handleMessage(msg string) {
 		topEntityKey        string
 	)
 
-	resp, err := witClient.Message(msg)
+	resp, err := witClient.Message(chatInput)
 	if err != nil {
 		log.Printf("unable to get wit.ai responses: %v", err)
 		return
@@ -53,37 +63,43 @@ func handleMessage(msg string) {
 			}
 		}
 	}
-	replyToUser(topEntityKey, topEntity)
+	out := replyToUser(topEntityKey, topEntity, w, r)
+
+	d := struct {
+		Input, Output string
+	}{
+		Input:  chatInput,
+		Output: out,
+	}
+	tpl.ExecuteTemplate(w, "index.gohtml", d)
+
 }
 
-func replyToUser(topEntityKey string, entity wit.MessageEntity) {
+func replyToUser(topEntityKey string, entity wit.MessageEntity, w http.ResponseWriter, r *http.Request) string {
 
-	var myText string
+	var res string
 	switch strings.ToLower(topEntityKey) {
 	case "greetings":
-		myText = "Hi, How can i help you?"
-		fmt.Println(myText)
-		return
+		res = "Hi, How can i help you?"
+
 	case "bye":
-		myText = "Thank you, Have a nice day."
-		fmt.Println(myText)
-		return
+		res = "Thank you, Have a nice day."
+
 	case "thanks":
-		myText = "Its my pleasure. Please let me know if i can help yu with anything else."
-		fmt.Println(myText)
-		return
+		res = "Its my pleasure. Please let me know if i can help yu with anything else."
+
 	case "wolfram_search_query":
-		res, err := wolframClient.GetShortAnswerQuery(entity.Value.(string), wolfram.Metric, 1000)
+		r, err := wolframClient.GetShortAnswerQuery(entity.Value.(string), wolfram.Metric, 1000)
 		if err != nil {
 			log.Printf("unable to get wolfram result: %v", err)
-			return
 		}
-		fmt.Println(res)
-		return
+		res = r
+
 	default:
-		myText = "Hi it is out of my scope. sorry"
-		fmt.Println(myText)
-		return
+		res = "Hi it is out of my scope. sorry"
+
 	}
+
+	return res
 
 }
